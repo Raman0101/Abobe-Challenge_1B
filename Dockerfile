@@ -4,14 +4,18 @@ FROM --platform=linux/amd64 python:3.10-slim
 
 WORKDIR /app
 
-# Copy dependency files
-COPY requirements.txt .
+ENV PYTHONUNBUFFERED=1
+ENV PYTHONPATH=/app
 
-# Install dependencies
+# Copy dependency file and install dependencies
+COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy source code
+# Copy all source code and project files
 COPY . .
 
-# Run the processing script automatically
-CMD ["python", "process_pdfs.py"]
+# Ensure input and output directories exist
+RUN mkdir -p /app/input && mkdir -p /app/output
+
+# Set the default command to run your main orchestrator
+CMD ["python", "main.py"]

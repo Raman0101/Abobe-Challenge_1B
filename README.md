@@ -1,67 +1,62 @@
-# PDF Collection Analyzer 📖
+# PDF Collection Analyzer – Unified Solution
 
-A blazing-fast PDF processing solution developed for **Adobe India Hackathon 2025 - Challenge 1a**. This system acts as an intelligent document analyst, extracting the **title** from each PDF in a collection and generating a single, structured `combined_output.json` file. The solution is fully containerized, offline-compatible, and optimized for strict performance constraints.
+## 🚀 Overview
 
----
-
-## 🔍 Approach
-
-This solution processes all PDFs in the `/input` directory and generates **one combined JSON file** in the `/output` directory. It extracts:
-- The **document title** from each PDF
-- The **filename** of each PDF
-
-It then combines these with user-provided metadata:
-- **Challenge Info** (challenge ID, test case name, description)
-- **Persona** (role)
-- **Job-to-be-done** (task)
-
-All metadata is collected via command-line prompts at runtime, making the solution fully generic and adaptable to any domain, persona, or task.
+This project is an intelligent document analysis pipeline designed for the Adobe India Hackathon Challenge. It processes collections of PDFs, extracts structured information, and ranks the most relevant sections based on a user-defined persona and job-to-be-done. The solution is modular, fully containerized, and supports batch processing of multiple collections.
 
 ---
 
-## 📚 Libraries Used
-
-This solution **does not use any heavy ML model**. It is built using the following Python library:
-
-- [`pdfplumber`](https://github.com/jsvine/pdfplumber) – For parsing PDF content and extracting titles
-
-Install dependencies using:
-
-```bash
-pip install -r requirements.txt
-```
-
-**Dependencies (from `requirements.txt`):**
-
-```
-pdfplumber==0.10.2
-```
-
----
-
-## ⚙️ How to Build and Run the Solution
-
-### 📁 Folder Structure
+## 🗂️ Project Structure
 
 ```
 Abobe-Challenge_1a/
+├── main.py
 ├── Dockerfile
-├── README.md
 ├── requirements.txt
-├── process_pdfs.py         # Entry point script
-├── parser.py               # Core PDF parsing logic
-├── output_schema.json      # JSON schema definition (optional)
-├── input/                  # Input folder (place PDFs here)
-└── output/                 # Output folder (combined_output.json saved here)
+├── README.md
+├── approach_explanation.md
+├── input/
+│   ├── collection_1/
+│   │   └── pdfs/
+│   │       └── ...pdfs...
+│   ├── collection_2/
+│   │   └── pdfs/
+│   │       └── ...pdfs...
+│   └── ...
+├── output/
+│   ├── collection_1_input.json
+│   ├── collection_1_output.json
+│   ├── collection_2_input.json
+│   ├── collection_2_output.json
+│   └── ...
+├── part-1/
+│   ├── process_pdfs.py
+│   └── parser.py
+├── part-2/
+│   └── src/
+│       ├── main2.py
+│       ├── input_parser.py
+│       ├── pdf_reader.py
+│       ├── chunk_embedder.py
+│       ├── ranker.py
+│       └── output_writer.py
 ```
 
-### 🐳 Build Docker Image
+---
+
+## ⚙️ How to Build and Run
+
+### 1. **Build the Docker Image**
 
 ```bash
 docker build -t pdf-collection-analyzer .
 ```
 
-### 🐳 Run the Container
+### 2. **Prepare Your Data**
+
+- Place each collection of PDFs in its own folder under `input/collection_xx/pdfs/`.
+
+### 3. **Run the Pipeline**
 
 ```bash
 docker run --rm -it \
@@ -71,78 +66,56 @@ docker run --rm -it \
   pdf-collection-analyzer
 ```
 
-- `input/`: place your input PDF files here.
-- `output/`: will contain the single `combined_output.json` result.
-- `--network none`: ensures full offline compliance.
+- The pipeline will process each collection in `input/`, generating:
+  - `collection_xx_input.json` (combined metadata and document info)
+  - `collection_xx_output.json` (final ranked sections and analysis)
 
 ---
 
-## 🧑‍💻 How to Use (Locally)
+## 🧑‍💻 Workflow Details
 
-1. Place your PDFs in the `input/` directory.
-2. Run:
-    ```bash
-    python3 process_pdfs.py
-    ```
-3. When prompted, enter:
-    - Challenge ID
-    - Test Case Name
-    - Description
-    - Persona Role
-    - Job-to-be-done Task
-4. The combined output will be saved as `output/combined_output.json`.
+1. **main.py**  
+   - Iterates over all collections in `input/`.
+   - For each collection:
+     - Runs `part-1/process_pdfs.py` to generate `collection_xx_input.json`.
+     - Runs `part-2/src/main2.py` to generate `collection_xx_output.json`.
 
----
+2. **part-1/process_pdfs.py**  
+   - Prompts the user for challenge info, persona, and job-to-be-done.
+   - Extracts titles from all PDFs in the collection.
+   - Outputs a single combined input JSON.
 
-## 🧪 Output Format
-
-The output `combined_output.json` file will look like:
-
-```json
-{
-  "challenge_info": {
-    "challenge_id": "round_1b_002",
-    "test_case_name": "travel_planner",
-    "description": "France Travel"
-  },
-  "documents": [
-    {
-      "filename": "South of France - Cities.pdf",
-      "title": "Comprehensive Guide to Major Cities in the South of France"
-    },
-    {
-      "filename": "South of France - Cuisine.pdf",
-      "title": "A Culinary Journey Through the South of France"
-    }
-    // ...more documents
-  ],
-  "persona": {
-    "role": "Travel Planner"
-  },
-  "job_to_be_done": {
-    "task": "Plan a trip of 4 days for a group of 10 college friends."
-  }
-}
-```
+3. **part-2/src/main2.py**  
+   - Loads the combined input JSON.
+   - Extracts, embeds, and ranks document sections using modular code.
+   - Outputs the final JSON in the required format.
 
 ---
 
-## ✅ Notes
+## 📤 Output Format
 
-- Only a single `combined_output.json` is generated per run.
-- No individual JSON files are created for each PDF.
-- The solution is fully generic: all metadata is provided by the user at runtime.
+Each `collection_xx_output.json` will contain:
+- `metadata`: input documents, persona, job-to-be-done, processing timestamp
+- `extracted_sections`: top-ranked sections with importance and page numbers
+- `subsection_analysis`: refined text for each top section
+
+---
+
+## 📝 Notes
+
+- All dependencies are managed via `requirements.txt`.
+- The solution is fully offline and containerized.
+- No individual JSONs are created for each PDF; only combined input and output JSONs per collection.
 
 ---
 
 ## 🙏 Acknowledgements
 
 - Adobe India Hackathon Team
-- [pdfplumber](https://github.com/jsvine/pdfplumber)
+- [pdfplumber](https://github.com/jsvine/pdfplumber) and other open-source libraries
 
 ---
 
 ## 👨‍💻 Author
 
-**Raman Kumar**  
-GitHub: [@Raman0101](https://github.com/Raman0101)
+**Your Name

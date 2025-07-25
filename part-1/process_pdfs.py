@@ -1,9 +1,19 @@
 import os
 import json
+import argparse
 from parser import extract_pdf_data
 
-INPUT_DIR = "/app/input"
-OUTPUT_DIR = "/app/output"
+def process_all_pdfs(input_dir):
+    documents = []
+    for filename in os.listdir(input_dir):
+        if filename.endswith(".pdf"):
+            input_path = os.path.join(input_dir, filename)
+            parsed_data = extract_pdf_data(input_path)
+            documents.append({
+                "filename": filename,
+                "title": parsed_data.get("title", "")
+            })
+    return documents
 
 def get_user_metadata():
     print("Enter challenge info:")
@@ -31,31 +41,23 @@ def get_user_metadata():
         }
     }
 
-def process_all_pdfs():
-    documents = []
-    for filename in os.listdir(INPUT_DIR):
-        if filename.endswith(".pdf"):
-            input_path = os.path.join(INPUT_DIR, filename)
-            parsed_data = extract_pdf_data(input_path)
-            documents.append({
-                "filename": filename,
-                "title": parsed_data.get("title", "")
-            })
-    return documents
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--input_dir", required=True, help="Directory containing PDFs")
+    parser.add_argument("--output_json", required=True, help="Path to output combined JSON")
+    args = parser.parse_args()
 
-def generate_combined_json(metadata, documents):
+    metadata = get_user_metadata()
+    documents = process_all_pdfs(args.input_dir)
     combined = {
         "challenge_info": metadata["challenge_info"],
         "documents": documents,
         "persona": metadata["persona"],
         "job_to_be_done": metadata["job_to_be_done"]
     }
-    combined_path = os.path.join(OUTPUT_DIR, "combined_output.json")
-    with open(combined_path, "w") as f:
+    with open(args.output_json, "w") as f:
         json.dump(combined, f, indent=4)
-    print(f"[INFO] Combined output written to combined_output.json")
+    print(f"[INFO] Combined input JSON written to {args.output_json}")
 
 if __name__ == "__main__":
-    metadata = get_user_metadata()
-    documents = process_all_pdfs()
-    generate_combined_json(metadata, documents)
+    main()
