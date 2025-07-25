@@ -14,8 +14,8 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy all source code and project files
 COPY . .
 
-# Ensure input and output directories exist
-RUN mkdir -p /app/input && mkdir -p /app/output
+# Ensure input, output, and model directories exist
+RUN mkdir -p /app/input && mkdir -p /app/output && mkdir -p /app/models
 
 # Set the default command to run your main orchestrator
 CMD ["python", "main.py"]

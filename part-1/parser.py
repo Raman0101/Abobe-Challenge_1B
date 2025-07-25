@@ -4,54 +4,52 @@ import re
 
 def clean_text(text):
     """
-    Clean garbled or duplicated text and normalize spacing.
+    Cleans garbled or duplicated text and normalizes spacing.
     """
-    # Collapse duplicated characters (e.g. "RReeqquueesstt" → "Request")
+    # Collapse repeating characters (e.g. "RReeqquueesstt" -> "Request")
     text = re.sub(r'([A-Za-z])\1{1,}', r'\1', text)
-    # Remove extra spaces
+    # Normalize whitespaces
     text = re.sub(r'\s{2,}', ' ', text)
     return text.strip()
 
 def extract_pdf_data(pdf_path):
     """
-    Extracts title and outline from any general PDF document.
-    Returns JSON-compatible dictionary with 'title' and 'outline'.
+    Extracts the title, outline, and full content from a PDF.
+    Returns a dictionary with 'title', 'outline', and 'content'.
     """
-    title = ""
-    outline = []
-
     with pdfplumber.open(pdf_path) as pdf:
-        all_font_sizes = []
         all_chars = []
+        all_font_sizes = []
 
+        # Collect all characters and font sizes from all pages
         for page in pdf.pages:
             chars = page.chars
             all_chars.extend([(char, page.page_number) for char in chars])
-            all_font_sizes.extend([round(char["size"], 1) for char in chars])
+            all_font_sizes.extend([round(char['size'], 1) for char in chars])
 
-        if not all_font_sizes:
-            return {"title": "", "outline": []}
+        if not all_chars or not all_font_sizes:
+            return {"title": "", "outline": [], "content": ""}
 
-        # Most common font size → assumed body text size
+        # Determine the body font size (most common)
         body_font_size = Counter(all_font_sizes).most_common(1)[0][0]
 
-        # Group characters by line using Y-coordinate tolerance
+        # Group characters by lines (using Y coordinate per page)
         line_map = defaultdict(list)
         for char, page_num in all_chars:
-            y = round(char["top"], 1)
-            line_map[(page_num, y)].append(char)
+            y_key = round(char['top'], 1)
+            line_map[(page_num, y_key)].append(char)
 
+        # Process lines and calculate average font sizes
         lines_by_page = defaultdict(list)
-
         for (page_num, y), chars in line_map.items():
             sorted_chars = sorted(chars, key=lambda c: c['x0'])
             line_text = ''.join(c['text'] for c in sorted_chars)
-            font_sizes = [c['size'] for c in sorted_chars]
-            avg_size = sum(font_sizes) / len(font_sizes)
+            font_sizes = [round(c['size'], 1) for c in sorted_chars]
+            avg_size = round(sum(font_sizes) / len(font_sizes), 1)
 
             cleaned = clean_text(line_text)
-            if len(cleaned.strip()) < 4:
-                continue
+            if len(cleaned) < 4:
+                continue  # Skip noise or garbage lines
 
             lines_by_page[page_num].append({
                 "text": cleaned,
@@ -59,33 +57,28 @@ def extract_pdf_data(pdf_path):
                 "page": page_num
             })
 
-        # Define heading levels based on font size gaps
-        unique_sizes = sorted(set(round(size, 1) for size in all_font_sizes), reverse=True)
+        # Identify heading levels by font size (descending)
+        unique_sizes = sorted(set(all_font_sizes), reverse=True)
         size_to_level = {}
-        if unique_sizes:
-            size_to_level[unique_sizes[0]] = "H1"
-        if len(unique_sizes) > 1:
-            size_to_level[unique_sizes[1]] = "H2"
-        if len(unique_sizes) > 2:
-            size_to_level[unique_sizes[2]] = "H3"
-        if len(unique_sizes) > 3:
-            size_to_level[unique_sizes[3]] = "H4"
+        heading_levels = ["H1", "H2", "H3", "H4"]
+        for i in range(min(len(unique_sizes), len(heading_levels))):
+            size_to_level[unique_sizes[i]] = heading_levels[i]
 
-        # Build outline from large-font lines
+        # Construct outline
         seen = set()
         outline = []
         for page_num in sorted(lines_by_page.keys()):
             for entry in lines_by_page[page_num]:
-                size = round(entry["avg_size"], 1)
+                size = entry["avg_size"]
                 text = entry["text"]
 
                 level = size_to_level.get(size)
                 if not level:
-                    continue  # Skip small or unknown sizes
+                    continue
 
-                key = (text, page_num)
+                key = (text.lower(), page_num)
                 if key in seen:
-                    continue  # Skip duplicates
+                    continue
                 seen.add(key)
 
                 outline.append({
@@ -94,7 +87,7 @@ def extract_pdf_data(pdf_path):
                     "page": page_num
                 })
 
-        # Title = first H1 on page 1, or fallback to first heading
+        # Determine title (first H1 on page 1, or fallback)
         title = ""
         for h in outline:
             if h["level"] == "H1" and h["page"] == 1:
@@ -103,7 +96,15 @@ def extract_pdf_data(pdf_path):
         if not title and outline:
             title = outline[0]["text"]
 
+        # Construct full content as plain text
+        full_text_lines = []
+        for page in sorted(lines_by_page.keys()):
+            for line in lines_by_page[page]:
+                full_text_lines.append(line["text"])
+        full_text = "\n".join(full_text_lines)
+
         return {
             "title": title,
-            "outline": outline
+            "outline": outline,
+            "content": full_text
         }

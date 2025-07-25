@@ -13,10 +13,10 @@ def run_part1(collection_path, collection_name):
 
 def run_part2(collection_name):
     subprocess.run([
-        "python", "part-2/main2.py",
-        "--input_json", os.path.join(OUTPUT_ROOT, f"{collection_name}_input.json"),
-        "--output_json", os.path.join(OUTPUT_ROOT, f"{collection_name}_output.json")
-    ], check=True)
+    "python", "part-2/src/main2.py",
+    "--input_json", os.path.join(OUTPUT_ROOT, f"{collection_name}_input.json"),
+    "--output_json", os.path.join(OUTPUT_ROOT, f"{collection_name}_output.json")
+], check=True)
 
 def main():
     for collection in os.listdir(INPUT_ROOT):

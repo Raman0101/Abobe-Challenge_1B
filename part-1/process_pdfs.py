@@ -11,7 +11,8 @@ def process_all_pdfs(input_dir):
             parsed_data = extract_pdf_data(input_path)
             documents.append({
                 "filename": filename,
-                "title": parsed_data.get("title", "")
+                "title": parsed_data.get("title", ""),
+                "content": parsed_data.get("content", "")
             })
     return documents
 

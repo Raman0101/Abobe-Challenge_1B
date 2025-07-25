@@ -2,7 +2,8 @@ from sentence_transformers import SentenceTransformer
 import numpy as np
 
 # Load the model once globally (CPU only)
-model = SentenceTransformer("all-MiniLM-L6-v2")  # ~80MB, fast, CPU-compatible
+model = SentenceTransformer("/app/models/all-MiniLM-L6-v2")  # ✅ Load locally
+# ~80MB, fast, CPU-compatible
 
 def embed_chunks(chunk_data):
     """

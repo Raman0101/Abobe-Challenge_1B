@@ -9,25 +9,25 @@ This project is an intelligent document analysis pipeline designed for the Adobe
 ## 🗂️ Project Structure
 
 ```
-Abobe-Challenge_1a/
+Abobe-Challenge_1b/
 ├── main.py
 ├── Dockerfile
 ├── requirements.txt
 ├── README.md
 ├── approach_explanation.md
 ├── input/
-│   ├── collection_1/
+│   ├── Collection_1/
 │   │   └── pdfs/
 │   │       └── ...pdfs...
-│   ├── collection_2/
+│   ├── Collection_2/
 │   │   └── pdfs/
 │   │       └── ...pdfs...
 │   └── ...
 ├── output/
-│   ├── collection_1_input.json
-│   ├── collection_1_output.json
-│   ├── collection_2_input.json
-│   ├── collection_2_output.json
+│   ├── Collection_1_input.json
+│   ├── Collection_1_output.json
+│   ├── Collection_2_input.json
+│   ├── Collection_2_output.json
 │   └── ...
 ├── part-1/
 │   ├── process_pdfs.py
@@ -54,7 +54,7 @@ docker build -t pdf-collection-analyzer .
 
 ### 2. **Prepare Your Data**
 
-- Place each collection of PDFs in its own folder under `input/collection_xx/pdfs/`.
+- Place each collection of PDFs in its own folder under `input/Collection_xx/pdfs/`.
 
 ### 3. **Run the Pipeline**
 
@@ -67,8 +67,8 @@ docker run --rm -it \
 ```
 
 - The pipeline will process each collection in `input/`, generating:
-  - `collection_xx_input.json` (combined metadata and document info)
-  - `collection_xx_output.json` (final ranked sections and analysis)
+  - `Collection_xx_input.json` (combined metadata and document info)
+  - `Collection_xx_output.json` (final ranked sections and analysis)
 
 ---
 
@@ -77,24 +77,24 @@ docker run --rm -it \
 1. **main.py**  
    - Iterates over all collections in `input/`.
    - For each collection:
-     - Runs `part-1/process_pdfs.py` to generate `collection_xx_input.json`.
-     - Runs `part-2/src/main2.py` to generate `collection_xx_output.json`.
+     - Runs `part-1/process_pdfs.py` to generate `Collection_xx_input.json`.
+     - Runs `part-2/src/main2.py` to generate `Collection_xx_output.json`.
 
 2. **part-1/process_pdfs.py**  
-   - Prompts the user for challenge info, persona, and job-to-be-done.
-   - Extracts titles from all PDFs in the collection.
+   - Prompts the user for persona and job-to-be-done.
+   - Extracts titles and metadata from all PDFs in the collection.
    - Outputs a single combined input JSON.
 
 3. **part-2/src/main2.py**  
    - Loads the combined input JSON.
-   - Extracts, embeds, and ranks document sections using modular code.
+   - Extracts, embeds, and ranks document sections using modular logic.
    - Outputs the final JSON in the required format.
 
 ---
 
 ## 📤 Output Format
 
-Each `collection_xx_output.json` will contain:
+Each `Collection_xx_output.json` will contain:
 - `metadata`: input documents, persona, job-to-be-done, processing timestamp
 - `extracted_sections`: top-ranked sections with importance and page numbers
 - `subsection_analysis`: refined text for each top section
@@ -103,9 +103,9 @@ Each `collection_xx_output.json` will contain:
 
 ## 📝 Notes
 
-- All dependencies are managed via `requirements.txt`.
-- The solution is fully offline and containerized.
-- No individual JSONs are created for each PDF; only combined input and output JSONs per collection.
+- All dependencies are listed in `requirements.txt`.
+- The solution is fully containerized and runs completely offline.
+- The input and output are consolidated at the collection level (not per PDF).
 
 ---
 
@@ -118,4 +118,4 @@ Each `collection_xx_output.json` will contain:
 
 ## 👨‍💻 Author
 
-**Your Name
+**Raman Kumar**
