@@ -1,4 +1,4 @@
-# PDF Collection Analyzer – Unified Solution
+# PDF Collection Analyzer – Team - TechnoidX
 
 ## 🚀 Overview
 
@@ -119,3 +119,5 @@ Each `Collection_xx_output.json` will contain:
 ## 👨‍💻 Author
 
 **Raman Kumar**
+**Ram Samujh Singh**
+**Rishabh Dubey**
