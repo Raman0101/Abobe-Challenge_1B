@@ -1,37 +1,29 @@
-# PDF Outline Extractor 📖
+# PDF Collection Analyzer 📖
 
-A blazing-fast PDF processing solution developed for **Adobe India Hackathon 2025 - Challenge 1a**. It extracts structured data including the **document title** and **table of contents (outline)** from PDFs and outputs JSON files. Fully containerized, offline-compatible, and optimized under strict performance constraints.
+A blazing-fast PDF processing solution developed for **Adobe India Hackathon 2025 - Challenge 1a**. This system acts as an intelligent document analyst, extracting the **title** from each PDF in a collection and generating a single, structured `combined_output.json` file. The solution is fully containerized, offline-compatible, and optimized for strict performance constraints.
 
 ---
 
 ## 🔍 Approach
 
-This solution processes all PDFs in the `/input` directory and generates corresponding structured `.json` files in the `/output` directory. It extracts:
-- The **document title**
-- A hierarchical **outline** (table of contents/bookmarks), including:
-  - `text`: heading text
-  - `level`: outline depth (hierarchy)
-  - `page`: page number where the section starts
+This solution processes all PDFs in the `/input` directory and generates **one combined JSON file** in the `/output` directory. It extracts:
+- The **document title** from each PDF
+- The **filename** of each PDF
 
-It uses PyMuPDF to access internal PDF metadata and outline structure, then formats the extracted data to match a predefined schema.
+It then combines these with user-provided metadata:
+- **Challenge Info** (challenge ID, test case name, description)
+- **Persona** (role)
+- **Job-to-be-done** (task)
 
-**Key Features:**
-- Processes multiple PDFs in one go
-- Skips files without outlines
-- Fully offline and Dockerized
-- Meets all resource constraints:
-  - ≤200MB model size (no ML models used)
-  - ≤10 seconds for a 50-page PDF
-  - CPU-only execution
-  - ≤16GB RAM
+All metadata is collected via command-line prompts at runtime, making the solution fully generic and adaptable to any domain, persona, or task.
 
 ---
 
-## 📚 Models and Libraries Used
+## 📚 Libraries Used
 
 This solution **does not use any heavy ML model**. It is built using the following Python library:
 
-- [`PyMuPDF`](https://pymupdf.readthedocs.io/en/latest/) (`fitz`) – For parsing PDF metadata and outlines
+- [`pdfplumber`](https://github.com/jsvine/pdfplumber) – For parsing PDF content and extracting titles
 
 Install dependencies using:
 
@@ -42,94 +34,111 @@ pip install -r requirements.txt
 **Dependencies (from `requirements.txt`):**
 
 ```
-PyMuPDF==1.22.3
+pdfplumber==0.10.2
 ```
 
 ---
 
 ## ⚙️ How to Build and Run the Solution
 
-> This section is for documentation only. The evaluation process uses the “Expected Execution” procedure.
-
 ### 📁 Folder Structure
 
 ```
-Challenge_1a/
+Abobe-Challenge_1a/
 ├── Dockerfile
 ├── README.md
 ├── requirements.txt
 ├── process_pdfs.py         # Entry point script
 ├── parser.py               # Core PDF parsing logic
-├── json_generator.py       # (Optional) Test PDF generator
-├── output_schema.json      # JSON schema definition
+├── output_schema.json      # JSON schema definition (optional)
 ├── input/                  # Input folder (place PDFs here)
-└── output/                 # Output folder (results saved here)
+└── output/                 # Output folder (combined_output.json saved here)
 ```
 
 ### 🐳 Build Docker Image
 
 ```bash
-docker build -t pdf-processor .
+docker build -t pdf-collection-analyzer .
 ```
 
 ### 🐳 Run the Container
 
 ```bash
-docker run --rm \
+docker run --rm -it \
   -v $(pwd)/input:/app/input:ro \
   -v $(pwd)/output:/app/output \
   --network none \
-  pdf-processor
+  pdf-collection-analyzer
 ```
 
 - `input/`: place your input PDF files here.
-- `output/`: will contain extracted JSON outputs.
+- `output/`: will contain the single `combined_output.json` result.
 - `--network none`: ensures full offline compliance.
+
+---
+
+## 🧑‍💻 How to Use (Locally)
+
+1. Place your PDFs in the `input/` directory.
+2. Run:
+    ```bash
+    python3 process_pdfs.py
+    ```
+3. When prompted, enter:
+    - Challenge ID
+    - Test Case Name
+    - Description
+    - Persona Role
+    - Job-to-be-done Task
+4. The combined output will be saved as `output/combined_output.json`.
 
 ---
 
 ## 🧪 Output Format
 
-Each output `.json` file conforms to this schema:
+The output `combined_output.json` file will look like:
 
 ```json
 {
-  "title": "Document Title",
-  "outline": [
+  "challenge_info": {
+    "challenge_id": "round_1b_002",
+    "test_case_name": "travel_planner",
+    "description": "France Travel"
+  },
+  "documents": [
     {
-      "level": "1",
-      "text": "Chapter 1",
-      "page": 1
+      "filename": "South of France - Cities.pdf",
+      "title": "Comprehensive Guide to Major Cities in the South of France"
     },
     {
-      "level": "2",
-      "text": "Section 1.1",
-      "page": 2
+      "filename": "South of France - Cuisine.pdf",
+      "title": "A Culinary Journey Through the South of France"
     }
-  ]
+    // ...more documents
+  ],
+  "persona": {
+    "role": "Travel Planner"
+  },
+  "job_to_be_done": {
+    "task": "Plan a trip of 4 days for a group of 10 college friends."
+  }
 }
 ```
 
-You can validate this structure using the provided `output_schema.json`.
-
 ---
 
-## ✅ Optional: Testing With Sample PDF
+## ✅ Notes
 
-To test the system with a sample input:
-
-```bash
-python json_generator.py
-```
-
-This generates a sample PDF (e.g., `outlined_50_pages.pdf`) with a mock table of contents inside the `input/` folder.
+- Only a single `combined_output.json` is generated per run.
+- No individual JSON files are created for each PDF.
+- The solution is fully generic: all metadata is provided by the user at runtime.
 
 ---
 
 ## 🙏 Acknowledgements
 
 - Adobe India Hackathon Team
-- [PyMuPDF](https://pymupdf.readthedocs.io/en/latest/)
+- [pdfplumber](https://github.com/jsvine/pdfplumber)
 
 ---
 
