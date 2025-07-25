@@ -118,6 +118,6 @@ Each `Collection_xx_output.json` will contain:
 
 ## 👨‍💻 Author
 
-**Raman Kumar**
-**Ram Samujh Singh**
-**Rishabh Dubey**
+- **Raman Kumar**
+- **Ram Samujh Singh**
+- **Rishabh Dubey**
